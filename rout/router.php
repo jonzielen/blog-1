@@ -20,7 +20,7 @@ class Router {
   }
 
   protected function rout($routOrder) {
-    $this->routOrder = array_reverse($this->routParams);
+    $this->routOrder = $this->routParams;
     return $this->routOrder;
   }
 }

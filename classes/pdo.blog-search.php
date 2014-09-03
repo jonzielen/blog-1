@@ -29,9 +29,7 @@
       $this->statement = $this->link->prepare("SELECT * FROM ".$this->table." WHERE page_url = :blogURL LIMIT 1");
       $this->statement->bindParam(':blogURL',  $this->blogPostURL);
       $this->statement->execute();
-      $this->results = $this->statement->fetchAll(\PDO::FETCH_ASSOC);
-
-      self::displayResults();
+      $this->results = $this->statement->fetchAll(\PDO::FETCH_ASSOC)[0];
     }
 
     public function displayResults() {

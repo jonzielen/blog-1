@@ -2,7 +2,7 @@
 <html>
 <head>
   <title><?php echo @$page['title'].$site['title']; ?></title>
-  <link rel="stylesheet" type="text/css" href="<?php echo (SITE_URL); ?>assets/styles/main.css">
+  <link rel="stylesheet" type="text/css" href="<?php echo (SITE_URL); ?>/assets/styles/main.css">
   <?php
     if (@$page['meta']) {
       foreach ($page['meta'] as $key => $value) {

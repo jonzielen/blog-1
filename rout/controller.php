@@ -10,23 +10,69 @@ class Controller {
 
     foreach ($this->routParts as $key => $value) {
       if (method_exists('jon\Controller', $value)) {
-          self::$value($this->routParts);
-          break;
-        } else {
-          switch ($this->routParts[1]) {
-            case 'blog':
-              self::blogPage($this->routParts[0]);
-              break;
-
-            case 'edit':
-              self::edit($this->routParts[0]);
+        if (count($this->routParts) == 1) {
+          switch ($this->routParts[0]) {
+            case 'homepage':
+              self::homepage();
               break;
 
             default:
               self::errorPageInfo();
               break;
           }
+        } else {
+          switch ($this->routParts[1]) {
+            case 'blog':
+              switch (end($this->routParts)) {
+                case 'blog':
+                  self::blog(end($this->routParts));
+                  break;
+
+                default:
+                  self::blogPage(end($this->routParts));
+                  break;
+              }
+              break;
+
+            case 'edit':
+              switch (end($this->routParts)) {
+                case 'edit':
+                  self::homepageRedirect();
+                  break;
+
+                default:
+                  self::edit(end($this->routParts));
+                  break;
+              }
+              break;
+
+            case 'add':
+              self::add($this->routParts);
+              break;
+
+            case 'login':
+              self::login($this->routParts);
+              break;
+
+            case 'logout':
+              self::logout($this->routParts);
+              break;
+
+            default:
+              self::errorPageInfo();
+              break;
+          }
+        }
+        break;
       }
+    }
+  }
+
+  protected function homepageRedirect() {
+    if (file_exists('views/tpls/homepage-redirect.php')) {
+      $this->template['preHTML'] .= file_get_contents('views/tpls/homepage-redirect.php');
+    } else {
+      self::errorPageInfo();
     }
   }
 
@@ -65,7 +111,7 @@ class Controller {
   }
 
   protected function blog($urlParams) {
-    //echo 'AWESOME!';
+    $this->template['html'] .= 'AWESOME!';
 
     /*if (file_exists('views/tpls/blog-post.tpl.php')) {
       $this->template['html'] .= file_get_contents('views/tpls/blog-post.tpl.php');
@@ -83,8 +129,8 @@ class Controller {
         self::errorPageInfo();
       } else {
         // not empty
-        if ($dbRead->results[0]) {
-          foreach ($dbRead->results[0] as $key => $value) {
+        if ($dbRead->results) {
+          foreach ($dbRead->results as $key => $value) {
             $this->template['vars'][$key] = $value;
           }
         } else {
@@ -99,6 +145,9 @@ class Controller {
           $this->template['vars']['meta']['description'] = BlogPostDataProcess::metaDescriptionFromBody($this->template['vars']['post_body']);
           $this->template['vars']['meta']['keywords'] = $this->template['vars']['tags'];
           $this->template['vars']['tags'] = BlogPostDataProcess::tagsWrap($this->template['vars']['tags']);
+          if (@$_SESSION['logged_in'] == true) {
+            $this->template['vars']['edit_blog_post'] = '<a href="/edit/'.$blogPost.'">edit</a>';
+          }
         } else {
           self::errorPageInfo();
         }
@@ -107,24 +156,87 @@ class Controller {
         if (file_exists('views/tpls/blog-post.tpl.php')) {
           $this->template['html'] .= file_get_contents('views/tpls/blog-post.tpl.php');
 
+          function removeEmpty($templateHTML) {
+            return $templateHTML = preg_replace('^{.*}^', '', $templateHTML);
+          }
+
           foreach ($this->template['vars'] as $key => $value) {
             // skip meta, and any other value that is array
             if (!is_array($value)) {
               $this->template['html'] = str_replace("{".$key."}", $value, $this->template['html']);
             }
           }
+          $this->template['html'] = removeEmpty($this->template['html']);
+        } else {
+          self::errorPageInfo();
+        }
+      }
+    } else {
+      self::errorPageInfo();
+    }
+  }
+
+  protected function edit($blogPost) {
+    // connect to db, pull info
+    if (@$_SESSION['logged_in'] == true) {
+
+      if (!empty($_POST)) {
+        if (file_exists('models/database-update.php')) {
+          $this->template['preHTML'] .= file_get_contents('models/database-update.php');
+        }
+      }
+
+      if (file_exists('models/database-blog-search.php')) {
+        require_once 'models/database-blog-search.php';
+      } else {
+        self::errorPageInfo();
+      }
+
+      if (empty($dbRead->results)) {
+        self::errorPageInfo();
+      } else {
+        // not empty
+        if ($dbRead->results) {
+          foreach ($dbRead->results as $key => $value) {
+            $this->template['vars'][$key] = $value;
+          }
         } else {
           self::errorPageInfo();
         }
 
-        // ADD EDIT
+        // post database call data processing
+        if (file_exists('classes/blogpostdataprocess.php')) {
+          require 'classes/blogpostdataprocess.php';
 
+          $this->template['vars']['unix_time'] = BlogPostDataProcess::dateFormat($this->template['vars']['unix_time']);
+          $this->template['vars']['meta']['description'] = BlogPostDataProcess::metaDescriptionFromBody($this->template['vars']['post_body']);
+          $this->template['vars']['meta']['keywords'] = $this->template['vars']['tags'];
+          $this->template['vars']['tags'] = $this->template['vars']['tags'];
+        } else {
+          self::errorPageInfo();
+        }
 
+        // templating
+        if (file_exists('views/tpls/edit-blog-post.tpl.php')) {
+          $this->template['html'] .= file_get_contents('views/tpls/edit-blog-post.tpl.php');
 
+          function removeEmpty($templateHTML) {
+            return $templateHTML = preg_replace('^{.*}^', '', $templateHTML);
+          }
 
+          foreach ($this->template['vars'] as $key => $value) {
+            // skip meta, and any other value that is array
+            if (!is_array($value)) {
+              $this->template['html'] = str_replace("{".$key."}", $value, $this->template['html']);
+            }
+          }
+          $this->template['html'] = removeEmpty($this->template['html']);
+        } else {
+          self::errorPageInfo();
+        }
       }
     } else {
-      self::errorPageInfo();
+      self::notLoggedIn();
     }
   }
 
@@ -141,78 +253,6 @@ class Controller {
       } else {
         self::notLoggedIn();
       }
-    } else {
-      self::notLoggedIn();
-    }
-  }
-
-  protected function edit($blogPost) {
-
-    if (@$_SESSION['logged_in'] == true) {
-
-
-      /**/
-      // connect to db, pull info
-      if (file_exists('models/database-blog-search.php')) {
-        require_once 'models/database-blog-search.php';
-
-        //$returns = $dbRead->displayResults();
-
-        echo '<pre>';
-        print_r(get_defined_vars());
-        echo '</pre>';
-
-
-
-        //echo $dbRead->displayResults();
-
-
-        if (empty($dbRead->results)) {
-          self::errorPageInfo();
-        } else {
-          // not empty
-          if ($dbRead->results[0]) {
-            foreach ($dbRead->results[0] as $key => $value) {
-              $this->template['vars'][$key] = $value;
-            }
-          } else {
-            self::errorPageInfo();
-          }
-
-          // post database call data processing
-          if (file_exists('classes/blogpostdataprocess.php')) {
-            require 'classes/blogpostdataprocess.php';
-
-            $this->template['vars']['unix_time'] = BlogPostDataProcess::dateFormat($this->template['vars']['unix_time']);
-            $this->template['vars']['meta']['description'] = BlogPostDataProcess::metaDescriptionFromBody($this->template['vars']['post_body']);
-            $this->template['vars']['meta']['keywords'] = $this->template['vars']['tags'];
-            $this->template['vars']['tags'] = BlogPostDataProcess::tagsWrap($this->template['vars']['tags']);
-          } else {
-            self::errorPageInfo();
-          }
-
-          // templating
-          if (file_exists('views/tpls/edit-blog-post.tpl.php')) {
-            $this->template['html'] .= file_get_contents('views/tpls/edit-blog-post.tpl.php');
-
-            foreach ($this->template['vars'] as $key => $value) {
-              // skip meta, and any other value that is array
-              if (!is_array($value)) {
-                $this->template['html'] = str_replace("{".$key."}", $value, $this->template['html']);
-              }
-            }
-          } else {
-            self::errorPageInfo();
-          }
-        }
-      } else {
-        self::errorPageInfo();
-      }
-      /**/
-
-
-
-
     } else {
       self::notLoggedIn();
     }

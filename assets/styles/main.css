@@ -168,3 +168,28 @@ body {
   font:normal bold 12px/14px Arial, Helvetica, sans-serif;
   color:#000;
 }
+
+/* edit blog post */
+#edit-post label {
+  display:block;
+}
+
+#edit-post input {
+  display:block;
+  width:50%;
+}
+
+#edit-post textarea {
+  display:block;
+  width:99.5%;
+  height:400px;
+}
+
+#edit-post button {
+  display:block;
+}
+
+#edit-post label span {
+  font:normal bold 12px/14px Arial, Helvetica, sans-serif;
+  color:#ff0000;
+}

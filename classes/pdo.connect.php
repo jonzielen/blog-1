@@ -10,7 +10,6 @@
     private $link;
     private $statement;
 
-
     public function __construct($database) {
       $this->driver   = $database['driver'];
       $this->host     = $database['host'];

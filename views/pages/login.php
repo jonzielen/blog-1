@@ -1,6 +1,6 @@
 <h1>Login:</h1>
 <?php if (@$_SESSION['logged_in'] != true): ?>
-<form action="<?php echo SITE_URL.'login'; ?>" method="post">
+<form action="<?php echo SITE_URL.'/login'; ?>" method="post">
   <label>Username:</label>
   <input type="text" name="username" id="username" />
 

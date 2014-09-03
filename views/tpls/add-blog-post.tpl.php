@@ -1,6 +1,6 @@
 <h1>Add Blog Post:</h1>
 
-<form action="<?php echo SITE_URL.'add' ?>" method="post" id="add-post">
+<form action="<?php echo SITE_URL.'/add' ?>" method="post" id="add-post">
   <label for="title">Title:</label>
   <input type="text" id="title" name="title" />
 

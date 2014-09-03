@@ -1,4 +1,5 @@
 <div class="blog-post">
+  {edit_blog_post}
   <h1>{post_title}</h1>
   <h3>{unix_time}</h3>
   <div class="tag-list">{tags}</div>
